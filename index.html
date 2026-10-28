@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OZONE — The Shield We Breathe</title>
+<meta name="description" content="An interactive tribute to the ozone layer — Earth's fragile, shimmering shield." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+<style>
+  /* ============================================================
+     DESIGN TOKENS
+     ============================================================ */
+  :root {
+    --bg:        #04060f;
+    --bg-2:      #070b1c;
+    --ink:       #eaf2ff;
+    --ink-dim:   #93a5c8;
+    --ink-faint: #5a688a;
+    --ozone:     #6ef3ff;
+    --ozone-2:   #3ec5ff;
+    --aurora:    #8b7dff;
+    --uv:        #ffb27a;
+    --coral:     #ff7a6b;
+    --line:      rgba(140, 175, 230, 0.14);
+    --card:      rgba(255, 255, 255, 0.035);
+    --ease:      cubic-bezier(0.22, 1, 0.36, 1);
+    --radius:    22px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: "Outfit", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--ozone); color: #04203a; }
+
+  /* ============================================================
+     BACKDROP — sky gradient + aurora glow
+     ============================================================ */
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background:
+      radial-gradient(120% 55% at 50% -5%,  #0e2450 0%, transparent 60%),
+      radial-gradient(80% 45% at 85% 12%,   #1a1f4d 0%, transparent 65%),
+      radial-gradient(70% 40% at 12% 30%,   #06334a 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 55%);
+  }
+  .aurora {
+    position: fixed;
+    z-index: -1;
+    width: 60vmax; height: 60vmax;
+    top: -22vmax; right: -18vmax;
+    background:
+      radial-gradient(closest-side, rgba(110, 243, 255, 0.10), transparent 70%),
+      radial-gradient(closest-side at 30% 60%, rgba(139, 125, 255, 0.10), transparent 70%);
+    filter: blur(10px);
+    animation: drift 26s var(--ease) infinite alternate;
+    pointer-events: none;
+  }
+  .aurora--b {
+    top: auto; right: auto;
+    bottom: -30vmax; left: -22vmax;
+    background:
+      radial-gradient(closest-side, rgba(62, 197, 255, 0.08), transparent 70%),
+      radial-gradient(closest-side at 60% 40%, rgba(255, 178, 122, 0.06), transparent 70%);
+    animation-duration: 34s;
+    animation-delay: -12s;
+  }
+  @keyframes drift {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(-6%, 8%, 0) scale(1.12); }
+  }
+
+  /* ============================================================
+     CANVAS PARTICLE FIELD
+     ============================================================ */
+  .molecules {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+  }
+
+  /* ============================================================
+     NAV
+     ============================================================ */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px clamp(20px, 5vw, 56px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    background: linear-gradient(180deg, rgba(4, 6, 15, 0.55), rgba(4, 6, 15, 0));
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    font-size: 14px;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .brand .mark {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 1px solid rgba(110, 243, 255, 0.5);
+    display: grid; place-items: center;
+    font-size: 10px;
+    letter-spacing: 0;
+    color: var(--ozone);
+    box-shadow: 0 0 18px rgba(110, 243, 255, 0.25), inset 0 0 12px rgba(110, 243, 255, 0.15);
+  }
+  nav ul {
+    display: flex;
+    gap: clamp(14px, 3vw, 34px);
+    list-style: none;
+  }
+  nav a {
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  nav a:hover { color: var(--ozone); }
+  .navbar-toggler { border-color: var(--line); }
+  .navbar-toggler-icon { filter: invert(1); }
+
+  /* ============================================================
+     HERO
+     ============================================================ */
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+    overflow: hidden;
+  }
+  .hero__inner { position: relative; z-index: 2; max-width: 900px; }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--ozone);
+    border: 1px solid rgba(110, 243, 255, 0.25);
+    border-radius: 999px;
+    padding: 9px 20px;
+    background: rgba(110, 243, 255, 0.05);
+  }
+  .kicker::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--ozone);
+    box-shadow: 0 0 12px var(--ozone);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.35; transform: scale(0.75); } }
+
+  h1 {
+    font-family: "Fraunces", serif;
+    font-weight: 300;
+    font-size: clamp(52px, 10vw, 128px);
+    line-height: 1.02;
+    letter-spacing: 0.01em;
+    margin: 34px 0 10px;
+    background: linear-gradient(180deg, #ffffff 0%, #bfe9ff 60%, #6ef3ff 110%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  h1 em {
+    font-style: italic;
+    font-weight: 400;
+    background: linear-gradient(90deg, var(--ozone), var(--aurora) 70%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero p {
+    max-width: 560px;
+    margin: 22px auto 0;
+    color: var(--ink-dim);
+    font-size: clamp(16px, 2vw, 19px);
+    font-weight: 300;
+  }
+  .hero__cta { margin-top: 42px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+  .btn {
+    display: inline-block;
+    padding: 15px 32px;
+    border-radius: 999px;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease), background 0.35s;
+  }
+  .btn--primary {
+    color: #03141f;
+    font-weight: 600;
+    background: linear-gradient(120deg, var(--ozone), var(--ozone-2));
+    box-shadow: 0 0 32px rgba(110, 243, 255, 0.35);
+  }
+  .btn--primary:hover { transform: translateY(-3px); box-shadow: 0 8px 44px rgba(110, 243, 255, 0.5); }
+  .btn--ghost {
+    color: var(--ink);
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .btn--ghost:hover { border-color: rgba(110, 243, 255, 0.45); transform: translateY(-3px); }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 32px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    width: 1px; height: 56px;
+    background: linear-gradient(180deg, transparent, var(--ozone));
+    opacity: 0.6;
+  }
+  .scroll-hint::after {
+    content: "";
+    position: absolute;
+    bottom: 0; left: -3px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--ozone);
+    box-shadow: 0 0 12px var(--ozone);
+    animation: fall 2.2s var(--ease) infinite;
+  }
+  @keyframes fall {
+    from { transform: translateY(-44px); opacity: 0; }
+    30%  { opacity: 1; }
+    to   { transform: translateY(0); opacity: 0; }
+  }
+
+  /* Sun & rays drawn behind the hero content */
+  .sun {
+    position: absolute;
+    top: 8%; right: 12%;
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff3e0 0%, var(--uv) 45%, transparent 72%);
+    filter: blur(2px);
+    opacity: 0.9;
+    animation: breathe 7s ease-in-out infinite;
+  }
+  @keyframes breathe { 50% { opacity: 0.55; transform: scale(0.96); } }
+  @media (max-width: 760px) { .sun { width: 78px; height: 78px; top: 6%; right: 8%; } }
+
+  /* ============================================================
+     LAYOUT PRIMITIVES
+     ============================================================ */
+  section { position: relative; padding: clamp(80px, 12vw, 150px) clamp(20px, 6vw, 80px); }
+  .wrap { max-width: 1120px; margin: 0 auto; }
+
+  .section-head { max-width: 720px; margin-bottom: clamp(44px, 7vw, 80px); }
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--ozone-2);
+    display: block;
+    margin-bottom: 16px;
+  }
+  h2 {
+    font-family: "Fraunces", serif;
+    font-weight: 300;
+    font-size: clamp(32px, 5vw, 56px);
+    line-height: 1.1;
+  }
+  h2 em { font-style: italic; color: var(--ozone); }
+  .lead { margin-top: 18px; color: var(--ink-dim); font-size: 17px; font-weight: 300; }
+
+  /* reveal on scroll */
+  .reveal {
+    opacity: 0;
+    transform: translateY(34px);
+    transition: opacity 1s var(--ease), transform 1s var(--ease);
+  }
+  .reveal.is-in { opacity: 1; transform: none; }
+  .reveal[data-delay="1"] { transition-delay: 0.12s; }
+  .reveal[data-delay="2"] { transition-delay: 0.24s; }
+  .reveal[data-delay="3"] { transition-delay: 0.36s; }
+
+  /* ============================================================
+     ATMOSPHERE BANDS
+     ============================================================ */
+  .bands {
+    display: grid;
+    gap: 12px;
+  }
+  .band {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 22px;
+    padding: 26px 30px;
+    border: 1px solid var(--line);
+    border-left: none;
+    border-radius: 14px;
+    background: var(--card);
+    overflow: hidden;
+    transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease), background 0.5s;
+    cursor: default;
+  }
+  .band::before {
+    content: "";
+    position: absolute;
+    inset: 0; right: auto;
+    width: 5px;
+    background: var(--band-color, var(--ink-faint));
+    box-shadow: 0 0 24px var(--band-color, transparent);
+    opacity: 0.85;
+  }
+  .band:hover {
+    transform: translateX(8px);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  }
+  .band__alt {
+    min-width: 92px;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .band__name {
+    font-family: "Fraunces", serif;
+    font-size: clamp(20px, 2.6vw, 28px);
+    font-weight: 400;
+  }
+  .band__desc { color: var(--ink-dim); font-size: 15px; font-weight: 300; flex: 1; }
+  .band--ozone { box-shadow: 0 0 60px rgba(110, 243, 255, 0.08); }
+  .band--ozone .band__name { color: var(--ozone); }
+  .band__tag {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #04283a;
+    background: var(--ozone);
+    padding: 5px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  /* ============================================================
+     STATS
+     ============================================================ */
+  .stats { margin-top: 0; }
+  .stat {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--card);
+    padding: clamp(26px, 4vw, 40px);
+    transition: transform 0.5s var(--ease), border-color 0.5s;
+  }
+  .stat:hover { transform: translateY(-6px); border-color: rgba(110, 243, 255, 0.35); }
+  .stat__num {
+    font-family: "Fraunces", serif;
+    font-size: clamp(44px, 6vw, 66px);
+    font-weight: 300;
+    line-height: 1;
+    color: var(--ozone);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat__num small { font-size: 22px; color: var(--ink-dim); margin-left: 4px; }
+  .stat__label { margin-top: 12px; color: var(--ink-dim); font-size: 14px; font-weight: 300; }
+
+  /* ============================================================
+     CHEMISTRY — Chapman cycle
+     ============================================================ */
+  .cycle {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (min-width: 860px) { .cycle { grid-template-columns: repeat(4, 1fr); } }
+  .step {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--card);
+    padding: 30px 26px;
+    transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
+  }
+  .step:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(110, 243, 255, 0.08);
+  }
+  .step__eq {
+    font-family: "Fraunces", serif;
+    font-size: clamp(20px, 2.4vw, 26px);
+    color: var(--ink);
+  }
+  sub { color: var(--ozone-2); }
+  .step__note { margin-top: 14px; font-size: 14px; font-weight: 300; color: var(--ink-dim); }
+  .step__n {
+    position: absolute;
+    top: 18px; right: 20px;
+    width: 26px; height: 26px;
+    display: grid; place-items: center;
+    font-size: 12px;
+    color: var(--ozone);
+    border: 1px solid rgba(110, 243, 255, 0.3);
+    border-radius: 50%;
+  }
+
+  /* ============================================================
+     TIMELINE
+     ============================================================ */
+  .timeline {
+    position: relative;
+    margin-left: 6px;
+    padding-left: 38px;
+    border-left: 1px solid var(--line);
+  }
+  .event { position: relative; padding-bottom: 46px; max-width: 620px; }
+  .event:last-child { padding-bottom: 0; }
+  .event::before {
+    content: "";
+    position: absolute;
+    left: -44px; top: 7px;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--ozone-2);
+    box-shadow: 0 0 14px rgba(62, 197, 255, 0.5);
+  }
+  .event--heal::before { border-color: var(--ozone); background: var(--ozone); }
+  .event__year {
+    font-family: "Fraunces", serif;
+    font-size: clamp(26px, 3.4vw, 38px);
+    font-weight: 300;
+    color: var(--ozone);
+    font-variant-numeric: tabular-nums;
+  }
+  .event--future .event__year { color: var(--uv); }
+  .event h3 {
+    font-weight: 500;
+    font-size: 17px;
+    letter-spacing: 0.02em;
+    margin: 6px 0 6px;
+  }
+  .event p { color: var(--ink-dim); font-size: 15px; font-weight: 300; }
+  .event--future p { color: var(--ink-dim); }
+
+  /* ============================================================
+     QUOTE BANNER
+     ============================================================ */
+  .quote {
+    text-align: center;
+    max-width: 840px;
+    margin: 0 auto;
+  }
+  .quote blockquote {
+    font-family: "Fraunces", serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(24px, 4vw, 40px);
+    line-height: 1.35;
+    background: linear-gradient(90deg, #cfefff, #8b7dff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .quote cite {
+    display: block;
+    margin-top: 26px;
+    font-style: normal;
+    font-size: 13px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ============================================================
+     FOOTER
+     ============================================================ */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 60px clamp(20px, 6vw, 80px) 70px;
+    text-align: center;
+  }
+  footer .big {
+    font-family: "Fraunces", serif;
+    font-weight: 300;
+    font-size: clamp(40px, 8vw, 96px);
+    letter-spacing: 0.06em;
+    background: linear-gradient(180deg, #fff, #3ec5ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    opacity: 0.95;
+  }
+  footer .meta {
+    margin-top: 30px;
+    color: var(--ink-faint);
+    font-size: 13px;
+    letter-spacing: 0.14em;
+  }
+  footer a { color: var(--ozone-2); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ============================================================
+     O3 MOLECULE SVG MOTIF
+     ============================================================ */
+  .motif {
+    width: 68px; height: 30px;
+    margin: 0 auto 26px;
+    opacity: 0.9;
+  }
+  .motif circle {
+    fill: none;
+    stroke: var(--ozone);
+    stroke-width: 1.4;
+    filter: drop-shadow(0 0 6px rgba(110, 243, 255, 0.6));
+  }
+</style>
+</head>
+<body>
+
+<div class="backdrop" aria-hidden="true"></div>
+<div class="aurora" aria-hidden="true"></div>
+<div class="aurora aurora--b" aria-hidden="true"></div>
+
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+  <a class="brand" href="#top">
+    <span class="mark">O₃</span> OZONE
+  </a>
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ozoneNavigation" aria-controls="ozoneNavigation" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+  <div class="collapse navbar-collapse justify-content-end" id="ozoneNavigation"><ul class="navbar-nav">
+    <li class="nav-item"><a class="nav-link" href="#layer">The Layer</a></li>
+    <li class="nav-item"><a class="nav-link" href="#stats">By Numbers</a></li>
+    <li class="nav-item"><a class="nav-link" href="#chemistry">Chemistry</a></li>
+    <li class="nav-item"><a class="nav-link" href="#story">The Story</a></li>
+  </ul>
+  </div></div>
+</nav>
+
+<!-- ============================== HERO ============================== -->
+<header class="hero" id="top">
+  <canvas class="molecules" id="field"></canvas>
+  <div class="sun" aria-hidden="true"></div>
+  <div class="hero__inner">
+    <span class="kicker">15 – 35 km above your head</span>
+    <h1>The invisible shield<br /><em>that lets life exist</em></h1>
+    <p>
+      A film of three-atom oxygen, thinner — relatively — than the skin of an apple.
+      It absorbs the Sun's harshest light so that everything below can flourish.
+    </p>
+    <div class="hero__cta">
+      <a class="btn btn--primary" href="#layer">Descend the sky</a>
+      <a class="btn btn--ghost" href="#story">Story of the hole</a>
+    </div>
+  </div>
+  <div class="scroll-hint" aria-hidden="true"></div>
+</header>
+
+<main>
+  <!-- ============================== LAYER ============================== -->
+  <section id="layer">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">I — Vertical Voyage</span>
+        <h2>The sky, floor by <em>floor</em></h2>
+        <p class="lead">
+          One meteorologist's stratosphere is another astronaut's lobby. Wander upward
+          through the layers of the atmosphere — and find where the ozone glows.
+        </p>
+      </div>
+
+      <div class="bands">
+        <div class="band reveal" style="--band-color:#ffd6a5">
+          <span class="band__alt">0–8 km</span>
+          <span class="band__name">Troposphere</span>
+          <span class="band__desc">Where weather lives. Clouds, wind, rain — and all of us.</span>
+        </div>
+        <div class="band band--ozone reveal" data-delay="1" style="--band-color:#6ef3ff">
+          <span class="band__alt">8–50 km</span>
+          <span class="band__name">Stratosphere</span>
+          <span class="band__desc">Home of the ozone layer — ~90% of Earth's ozone is parked here.</span>
+          <span class="band__tag">You are here, shield</span>
+        </div>
+        <div class="band reveal" data-delay="2" style="--band-color:#8b7dff">
+          <span class="band__alt">50–85 km</span>
+          <span class="band__name">Mesosphere</span>
+          <span class="band__desc">Meteors meet their match and burn — halting at ~85 km.</span>
+        </div>
+        <div class="band reveal" data-delay="3" style="--band-color:#5a688a">
+          <span class="band__alt">85 km+</span>
+          <span class="band__name">Thermosphere</span>
+          <span class="band__desc">Auroras ignite. The ISS orbits at ~400 km, surfing the airless light.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== STATS ============================== -->
+  <section id="stats">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">II — By the Numbers</span>
+        <h2>Small enough to miss,<br /><em>mighty enough to save</em></h2>
+      </div>
+      <div class="stats row g-3">
+        <div class="stat reveal col-12 col-sm-6 col-xl-3">
+          <div class="stat__num" data-count="90">0<small>%</small></div>
+          <div class="stat__label">of all atmospheric ozone lives in the stratosphere</div>
+        </div>
+        <div class="stat reveal col-12 col-sm-6 col-xl-3" data-delay="1">
+          <div class="stat__num" data-count="97">0<small>%</small></div>
+          <div class="stat__label">of Sun's UV-B radiation absorbed before reaching the ground</div>
+        </div>
+        <div class="stat reveal col-12 col-sm-6 col-xl-3" data-delay="2">
+          <div class="stat__num" data-count="3">0<small> atoms</small></div>
+          <div class="stat__label">of oxygen per molecule — O₃, a whisper of chemistry</div>
+        </div>
+        <div class="stat reveal col-12 col-sm-6 col-xl-3" data-delay="3">
+          <div class="stat__num" data-count="3">0<small> mm</small></div>
+          <div class="stat__label">of pure ozone, compressed, would wrap the whole planet</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== CHEMISTRY ============================== -->
+  <section id="chemistry">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">III — The Chemistry</span>
+        <h2>Four steps, running<br /><em>a billion times a second</em></h2>
+        <p class="lead">The Chapman cycle: sunlight builds ozone, sunlight unbuilds it, and the planet ends up wearing sunscreen.</p>
+      </div>
+      <div class="cycle">
+        <div class="step reveal">
+          <span class="step__n">1</span>
+          <div class="step__eq">O<sub>2</sub> + UV → 2O</div>
+          <div class="step__note">High-energy sunlight cracks ordinary oxygen apart.</div>
+        </div>
+        <div class="step reveal" data-delay="1">
+          <span class="step__n">2</span>
+          <div class="step__eq">O + O<sub>2</sub> → O<sub>3</sub></div>
+          <div class="step__note">A free oxygen atom adopts a partner — ozone is born.</div>
+        </div>
+        <div class="step reveal" data-delay="2">
+          <span class="step__n">3</span>
+          <div class="step__eq">O<sub>3</sub> + UV → O<sub>2</sub> + O</div>
+          <div class="step__note">Ozone soaks up deadly UV and quietly splits again.</div>
+        </div>
+        <div class="step reveal" data-delay="3">
+          <span class="step__n">4</span>
+          <div class="step__eq">O<sub>3</sub> + O → 2O<sub>2</sub></div>
+          <div class="step__note">The cycle closes. Sunscreen for a planet, self-rolling.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== QUOTE ============================== -->
+  <section>
+    <div class="wrap quote reveal">
+      <svg class="motif" viewBox="0 0 68 30" aria-hidden="true">
+        <circle cx="14" cy="15" r="7"/><circle cx="34" cy="15" r="7"/><circle cx="54" cy="15" r="7"/>
+      </svg>
+      <blockquote>
+        "The Montreal Protocol — a treaty signed by every nation on Earth — is the
+        only time humanity has healed a wound it gave the sky."
+      </blockquote>
+      <cite>Ranked 1990s · The Formation of a Truce with the Atmosphere</cite>
+    </div>
+  </section>
+
+  <!-- ============================== STORY TIMESLINE ============================== -->
+  <section id="story">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">IV — The Story</span>
+        <h2>A hole discovered,<br /><em>a promise kept</em></h2>
+      </div>
+      <div class="timeline">
+        <div class="event reveal">
+          <div class="event__year">1974</div>
+          <h3>The warning</h3>
+          <p>Molina & Rowland publish that CFCs — the gases in every fridge and spray can — devour ozone. Industry scoffs.</p>
+        </div>
+        <div class="event reveal">
+          <div class="event__year">1985</div>
+          <h3>The hole appears</h3>
+          <p>Farman's team in Antarctica measures springtime ozone down by 40%. The sky has a wound the size of a continent.</p>
+        </div>
+        <div class="event reveal">
+          <div class="event__year">1987</div>
+          <h3>The treaty</h3>
+          <p>The Montreal Protocol — the first treaty ever ratified by every UN country — phases out CFCs worldwide.</p>
+        </div>
+        <div class="event event--heal reveal">
+          <div class="event__year">2016</div>
+          <h3>Signs of healing</h3>
+          <p>NASA's Suomi and Aura satellites confirm: the hole is shrinking for the first time. The ozone shield is growing back.</p>
+        </div>
+        <div class="event event--future reveal">
+          <div class="event__year">~2066</div>
+          <h3>Full recovery (projected)</h3>
+          <p>If we keep the promise, the Antarctic ozone hole returns to its 1980 benchmark — a healed sky for a healed humankind.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== OUTRO ============================== -->
+  <section>
+    <div class="wrap quote reveal">
+      <blockquote>
+        "We solved one planetary crisis. It remains proof that we can solve another."
+      </blockquote>
+      <cite>— The Lesson of the Ozone Layer</cite>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="big">BREATHE EASY</div>
+  <div class="meta">
+    Made with curiosity · 15–35 km above everywhere
+    <br /><br />
+    Sources: NASA Ozone Watch · WMO & UNEP Ozone Assessments
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+/* ============================================================
+   CANVAS — floating O₃ molecule field
+   ============================================================ */
+(function () {
+  const canvas = document.getElementById("field");
+  const ctx = canvas.getContext("2d");
+  let W, H, dots;
+
+  function resize() {
+    W = canvas.width = canvas.offsetWidth * devicePixelRatio;
+    H = canvas.height = canvas.offsetHeight * devicePixelRatio;
+    const count = Math.min(90, Math.floor((canvas.offsetWidth * canvas.offsetHeight) / 16000));
+    dots = Array.from({ length: count }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: (Math.random() * 1.6 + 0.6) * devicePixelRatio,
+      vx: (Math.random() - 0.5) * 0.12 * devicePixelRatio,
+      vy: (Math.random() - 0.5) * 0.1 * devicePixelRatio - 0.02,
+      hue: Math.random() < 0.7 ? 187 : 160,   // cyan vs violet
+      tw: Math.random() * Math.PI * 2,
+    }));
+  }
+  resize();
+  addEventListener("resize", resize);
+
+  // link nearby dots with faint lines, like molecular bonds
+  function frame(t) {
+    ctx.clearRect(0, 0, W, H);
+    const limit = 110 * devicePixelRatio;
+
+    for (const d of dots) {
+      d.x += d.vx; d.y += d.vy; d.tw += 0.02;
+      if (d.x < -20) d.x = W + 20; if (d.x > W + 20) d.x = -20;
+      if (d.y < -20) d.y = H + 20; if (d.y > H + 20) d.y = -20;
+    }
+
+    ctx.lineWidth = devicePixelRatio * 0.5;
+    for (let i = 0; i < dots.length; i++) {
+      for (let j = i + 1; j < dots.length; j++) {
+        const a = dots[i], b = dots[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < limit) {
+          const alpha = (1 - dist / limit) * 0.14;
+          ctx.strokeStyle = `hsla(${a.hue}, 90%, 65%, ${alpha})`;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    for (const d of dots) {
+      const glow = 0.35 + Math.sin(d.tw) * 0.25;
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${d.hue}, 95%, 70%, ${glow})`;
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* ============================================================
+   SCROLL REVEALS
+   ============================================================ */
+(function () {
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) {
+          e.target.classList.add("is-in");
+          io.unobserve(e.target);
+        }
+      }
+    },
+    { threshold: 0.18 }
+  );
+  document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+})();
+
+/* ============================================================
+   ANIMATED COUNTERS
+   ============================================================ */
+(function () {
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        io.unobserve(e.target);
+        const num = e.target.firstChild;
+        const target = +e.target.dataset.count;
+        const start = performance.now();
+        const dur = 1600;
+        (function tick(now) {
+          const p = Math.min(1, (now - start) / dur);
+          const eased = 1 - Math.pow(1 - p, 4);
+          num.textContent = Math.round(target * eased);
+          if (p < 1) requestAnimationFrame(tick);
+        })(start);
+      }
+    },
+    { threshold: 0.5 }
+  );
+  document.querySelectorAll("[data-count]").forEach((el) => io.observe(el));
+})();
+</script>
+</body>
+</html>
